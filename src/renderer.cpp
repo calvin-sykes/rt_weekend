@@ -103,7 +103,7 @@ void renderer::render(const scene &scn) {
         unsigned int local_count = 0;
         unsigned int msg_length = 0;
         int tid = rtw_get_thread_num();
-		mem_arena arena;
+        mem_arena arena;
 
         #pragma omp for schedule(dynamic, 10) nowait
         for (int j = 0; j < h; j++) {
@@ -115,11 +115,9 @@ void renderer::render(const scene &scn) {
                     auto pix_colour = ray_colour<false>(arena, r, background, world, lights, max_depth);
                     stddev.update(pix_colour);
                     stddev_lum.update(luminance(pix_colour));
-                    // buffer[idx] += sanitise_pixel(pix_colour);
                 }
                 auto idx = i + w * j;
                 buffer[idx] = sanitise_pixel(stddev.mean());
-                // buffer[idx] = sanitise_pixel(stddev.median());
                 variance_buffer[idx] = stddev_lum.variance();
 				arena.reset();
 

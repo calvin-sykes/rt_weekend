@@ -5,7 +5,7 @@ SHELL = /bin/sh
 
 CONFIG = -Wall -pipe -Wno-psabi
 DEBUG = -g -O0
-DEFINES = #-DBVH_SAH
+DEFINES = -DPLATFORM_MACOS #-DBVH_SAH
 
 OPTIMISE = -O3 -march=native -flto=auto -fopenmp
 

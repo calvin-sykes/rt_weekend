@@ -12,43 +12,42 @@ std::optional<materials_map> load_material_library(mem_arena& arena, const char*
     }
 
     materials_map materials;
-
-    std::string name;
+    
     double Ns, d;
-    colour Ka, Kd, Ks;
+    colour /*Ka,*/ Kd, Ks;
     std::optional<std::string> map_Kd;
 
     char line[128];
+    char header[8];
+    std::string name;
     bool havemat = false;
     while (mtl_file.getline(line, 128)) {
         std::stringstream ss(line);
-        std::string header;
         ss >> std::skipws >> header;
-        if (header == "newmtl") {
+        if (!strcmp(header, "newmtl")) {
             ss >> name;
             havemat = true;
         }
-        else if (header == "Ns") {
+        else if (!strcmp(header, "Ns")) {
             ss >> Ns;
         }
-        else if (header == "d") {
+        else if (!strcmp(header, "d")) {
             ss >> d;
         }
-        else if (header == "Ka") {
-                ss >> Ka;
-        }
-        else if (header == "Kd") {
+        /*} else if (!strcmp(header, "Ka")) {
+                ss >> Ka;*/
+        else if (!strcmp(header, "Kd")) {
             ss >> Kd;
         }
-        else if (header == "Ks") {
+        else if (!strcmp(header, "Ks")) {
             ss >> Ks;
         }
-        else if (header == "map_Kd") {
+        else if (!strcmp(header, "map_Kd")) {
             std::string tmp;
             ss >> tmp;
             map_Kd = tmp;
         }
-        else if (havemat && header.empty()) {
+        else if (havemat && strlen(header) == 0) {
             texture* tex_diffuse;
             texture* tex_specular = arena.alloc<solid_colour>(Ks);
 

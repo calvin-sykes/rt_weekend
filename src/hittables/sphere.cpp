@@ -42,11 +42,9 @@ double sphere::pdf_value(const point3 &o, const vec3 &v) const {
     if (!this->hit(ray(o, v), epsilon, infinity, rec))
         return 0;
 
-    if (rad * rad > (cen - o).mag2())
-        return 0;
-
     auto cos_theta_max = sqrt(1 - rad * rad / (cen - o).mag2());
     auto solid_angle = two_pi * (1 - cos_theta_max);
+
     return 1.0 / solid_angle;
 }
 

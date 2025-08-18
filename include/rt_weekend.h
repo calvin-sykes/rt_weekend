@@ -1,9 +1,6 @@
 #ifndef RTWEEKEND_H
 #define RTWEEKEND_H
 
-// #define PLATFORM_WINDOWS
-#define PLATFORM_MACOS
-
 #include <cmath>
 #include <limits>
 #include <omp.h>

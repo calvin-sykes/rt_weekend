@@ -8,7 +8,9 @@
 #include <cmath>
 #include <iostream>
 
-// #define SSE_VECTOR
+#ifndef PLATFORM_MACOS
+#define SSE_VECTOR
+#endif
 
 using std::enable_if;
 

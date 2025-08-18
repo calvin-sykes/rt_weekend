@@ -97,7 +97,7 @@ hittable_list world_two_spheres(mem_arena &arena) {
     auto grey = arena.alloc<lambertian>(arena, colour(0.3f));
     objects.add(arena.alloc<xz_rect>(-5000, 5000, -5000, 5000, 0, grey));
 
-    // auto light = arena.alloc<diffuse_light>(arena, colour(100.0));
+    auto light = arena.alloc<diffuse_light>(arena, colour(100.0));
 
     auto c = colour(0.2, 0.4, 0.9);
 
@@ -557,18 +557,19 @@ hittable_list world_phong(mem_arena &arena) {
     double xpos = -500 + 1.5 * spacing;
     double radius = 0.4 * spacing;
 
+    auto ball_colour = colour(1.0, 0.0, 0.0);
     for (int i = 0; i < num_spheres; i++) {
         auto shininess = pow(10, min_shine + i * ((max_shine - min_shine) / (num_spheres - 1)));
-        // auto fspec = (0.05 * i) / num_spheres + (0.001 * (num_spheres - i)) / num_spheres;
-        // auto phong_mat = arena.alloc<phong>(arena, colour(1.0, 0.0, 0.0), fspec, shininess);
-        auto phong_mat = arena.alloc<ashikhmin_shirley>(arena, colour(1.0, 0.4, 0.0), colour(1.0), 0.05, shininess, shininess);
+        //auto fspec = (0.05 * i) / num_spheres + (0.001 * (num_spheres - i)) / num_spheres;
+        //auto phong_mat = arena.alloc<phong>(arena, ball_colour, fspec, shininess);
+        auto phong_mat = arena.alloc<ashikhmin_shirley>(arena, ball_colour, colour(1.0), 0.05, shininess, shininess);
         
         auto ball = arena.alloc<sphere>(point3(xpos, radius, 0), radius, phong_mat);
         spheres.add(ball);
         xpos += spacing;
     }
 
-    auto red = arena.alloc<lambertian>(arena, colour(1.0, 0.4, 0.0));
+    auto red = arena.alloc<lambertian>(arena, ball_colour);
     auto ball = arena.alloc<sphere>(point3(-500 + 0.5 * spacing, radius, 0), radius, red);
     spheres.add(ball);
 
@@ -872,14 +873,6 @@ hittable_list world_xmas(mem_arena& arena) {
     int n_colours = sizeof(light_colours) / sizeof(material*);
 
     int num_lights = 400;
-    /*hittable_list fairy_lights;
-    for (int i = 0; i < num_lights; i++) {
-        auto y = 50 + y_range - sqrt(random_number(50.0 * 50.0, y_range * y_range));
-        auto xz = tree_centre + random_unit_vector<point2>() * tree_radius * ((y_range - y) / y_range);
-        point3 origin{ xz.x(), y, xz.y() };
-        auto c = random_number(0, n_colours-1);
-        fairy_lights.add(arena.alloc<sphere>(origin, 0.75, light_colours[c]));        
-    }*/
     hittable_list fairy_lights;
     for (int i = 0; i < num_lights; i++) {
         while (true) {

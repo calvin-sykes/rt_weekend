@@ -94,45 +94,6 @@ private:
     }
 };
 
-// Splitter (?) material
-class metal_splitter : public material {
-public:
-    metal_splitter(mem_arena &arena, const colour& a, double f)
-        : albedo(arena.alloc<solid_colour>(a)), fuzz(f < 1 ? f : 1) {}
-
-    virtual bool scatter(
-        const ray& r_in, const hit_record& rec, scatter_record &srec, mem_arena &arena
-    ) const override {
-        vec3 unit_direction = unit_vector(r_in.direction());
-        double cos_theta = std::min(dot(-unit_direction, rec.normal), 1.0);
-
-        srec.attenuation = albedo->value(rec.u, rec.v, rec.p);
-        srec.pure_specular = true;
-        srec.pdf_ptr = nullptr;
-
-        if (cos_theta > 0.9) {
-            // pass
-            srec.specular_ray = r_in;
-        } else if (cos_theta < 0.1) {
-            orthonormal_basis onb {rec.normal};
-            // return v - 2 * dot(v, n) * n;
-            if (random_number() < 0.5) {
-                srec.specular_ray = ray(rec.p, onb.local_to_world(0, 1, 0), r_in.time());
-            } else {
-                srec.specular_ray = ray(rec.p, onb.local_to_world(0, -1, 0), r_in.time());
-            }
-        }
-
-        vec3 reflected = reflect(unit_direction, rec.normal);
-        srec.specular_ray = ray(rec.p, reflected + fuzz * random_in_unit_sphere(), r_in.time());
-        return true;
-    }
-
-private:
-    const texture* albedo;
-    double fuzz;
-};
-
 // Glass material
 class dielectric : public material {
 public:
@@ -250,29 +211,6 @@ private:
     const texture* albedo;
 };
 
-// class point_light : public material {
-// public:
-//     point_light(mem_arena &arena, const colour &c, bool two_sided = false) : emit(arena.alloc<solid_colour>(c)) {}
-//     point_light(const texture* a) : emit(a) {}
-
-//     virtual bool scatter(
-//         const ray &r_in, const hit_record &rec, scatter_record &srec, mem_arena &arena
-//     ) const override {
-//         return false;
-//     }
-
-//     virtual colour emitted(const ray &r_in, const hit_record &rec) const override {
-//         if (two_sided || rec.front_face)
-//             return emit->value(rec.u, rec.v, rec.p);
-//         else
-//             return colour(0);
-//     }
-
-// private:
-//     const texture* emit;
-//     bool two_sided;
-// };
-
 class diffuse_light : public material {
 public:
     diffuse_light(mem_arena &arena, const colour &c, bool two_sided = false) : emit(arena.alloc<solid_colour>(c)), two_sided(two_sided) {}
@@ -361,14 +299,6 @@ public:
         auto cos_alpha = std::max(0.0, dot(half_vector, rec.normal));
         auto specular = (shine + 1) * inv_two_pi * pow(cos_alpha, shine);
         return cosine * ((1 - fspec) * srec.attenuation * inv_pi + fspec * colour(1.0) * specular);
-        // if (srec.type == DIFFUSE) {
-        //     return cosine * srec.attenuation * inv_pi;
-        // } else {
-        //     auto half_vector = unit_vector(unit_vector(r_scattered.direction()) - unit_vector(r_in.direction()));
-        //     auto cos_alpha = std::max(0.0, dot(half_vector, rec.normal));
-        //     auto specular = (shine + 1) * inv_two_pi * pow(cos_alpha, shine);
-        //     return cosine * colour(1.0) * specular;
-        // }
     };
 
 private:
@@ -390,10 +320,7 @@ class ashikhmin_shirley : public material {
     virtual bool scatter(
         const ray& r_in, const hit_record& rec, scatter_record &srec, mem_arena &arena
     ) const override {
-        if (random_number() < fspec)
-            srec.attenuation = r_s->value(rec.u, rec.v, rec.p);
-        else
-            srec.attenuation = r_d->value(rec.u, rec.v, rec.p);
+        srec.attenuation = fspec * r_s->value(rec.u, rec.v, rec.p) + (1 - fspec) * r_d->value(rec.u, rec.v, rec.p);
         srec.pure_specular = false;
         srec.pdf_ptr = arena.alloc<ashikhmin_shirley_pdf>(rec.normal, r_in.direction(), nu, nv, fspec);
         return true;
@@ -422,7 +349,7 @@ class ashikhmin_shirley : public material {
         auto specular_brdf = (1.0 / (8 * pi)) * fresnel * sqrt((nu + 1) * (nv + 1)) \
             * pow(dot(rec.normal, h), exponent) / denominator;
         
-        auto diff_const = rd_corr * (colour(1.0) - rd_corr) * 28 / (23.0 * pi);
+        auto diff_const = rd_corr * (colour(1.0) - rs_corr) * 28 / (23.0 * pi);
         auto diffuse_brdf = diff_const \
             * (1.0 - pow(1.0 - dot(rec.normal, v) / 2.0, 5)) \
             * (1.0 - pow(1.0 - dot(rec.normal, l) / 2.0, 5));

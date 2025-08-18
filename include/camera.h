@@ -63,9 +63,12 @@ public:
         double t = (j + dt) * pixel_delta_y;
 
         // Depth-of-field jitter
-        auto lens_pos = random_in_unit_sphere<vec2>();
-        vec3 rd = lens_radius * vec3(lens_pos.x(), lens_pos.y(), 0.0);
-        vec3 offset = u * rd.x() + v * rd.y();
+        vec3 offset;
+        if (lens_radius > 0.0) {
+            auto lens_pos = random_in_unit_sphere<vec2>();
+            vec3 rd = lens_radius * vec3(lens_pos.x(), lens_pos.y(), 0.0);
+            offset = u * rd.x() + v * rd.y();
+        }
 
         return ray(
             origin + offset,
