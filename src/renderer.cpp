@@ -6,6 +6,8 @@
 #include "material.h"
 #include "pdf.h"
 
+#include <sstream>
+
 template<bool use_roulette>
 colour ray_colour(
     mem_arena &arena, ray &r, const background &bkg,
@@ -101,7 +103,7 @@ void renderer::render(const scene &scn) {
     {
         long long reported_count = 0;
         unsigned int local_count = 0;
-        unsigned int msg_length = 0;
+        size_t msg_length = 0;
         int tid = rtw_get_thread_num();
         mem_arena arena;
 
@@ -142,7 +144,7 @@ void renderer::render(const scene &scn) {
                     ss << "\rTraced " << count * num_samples << '/' << static_cast<long long>(total_size) * num_samples << " rays ("
                        << (1.0 * elapsed) / CLOCKS_PER_SEC << "s elapsed / "
                        << (1.0 * est_remaining) / CLOCKS_PER_SEC << "s remaining, "
-                       << (count * num_samples * CLOCKS_PER_SEC) / elapsed << " rays/sec, ";
+                       << (count * num_samples * CLOCKS_PER_SEC) / elapsed << " rays/sec, "
                        << (count * CLOCKS_PER_SEC) / elapsed << " px/sec)";
 #endif
                     auto msg = ss.str();

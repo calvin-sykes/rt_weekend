@@ -97,8 +97,6 @@ hittable_list world_two_spheres(mem_arena &arena) {
     auto grey = arena.alloc<lambertian>(arena, colour(0.3f));
     objects.add(arena.alloc<xz_rect>(-5000, 5000, -5000, 5000, 0, grey));
 
-    auto light = arena.alloc<diffuse_light>(arena, colour(100.0));
-
     auto c = colour(0.2, 0.4, 0.9);
 
     // Subsurface scattering sphere
@@ -489,10 +487,10 @@ hittable_list world_cornell_box_glass_spheres(mem_arena& arena, bool big_light) 
     for (int i = 0; i < grid; i++) {
         for (int j = 0; j < grid; j++) {
             for (int k = 0; k < grid; k++) {
-                int r = random_number(0.167 * size, 0.333 * size);
-                int x = random_number(i * size + 1.1 * r, (i + 1) * size - 1.1 * r);
-                int y = random_number(j * size + 1.1 * r, (j + 1) * size - 1.1 * r);
-                int z = random_number(k * size + 1.1 * r, (k + 1) * size - 1.1 * r);
+                int r = static_cast<int>(random_number(0.167 * size, 0.333 * size));
+                int x = static_cast<int>(random_number(i * size + 1.1 * r, (i + 1) * size - 1.1 * r));
+                int y = static_cast<int>(random_number(j * size + 1.1 * r, (j + 1) * size - 1.1 * r));
+                int z = static_cast<int>(random_number(k * size + 1.1 * r, (k + 1) * size - 1.1 * r));
 
                 // auto translucency = random_number(0.0, 0.25);
                 auto glass = arena.alloc<dielectric>(1.5);

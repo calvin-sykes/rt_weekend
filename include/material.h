@@ -254,7 +254,7 @@ public:
         if (cos_theta > cos_inner)
             return 1.0f;
         auto delta = (cos_theta - cos_outer) / (cos_inner - cos_outer);
-        return (delta * delta) * (delta * delta); 
+        return static_cast<float>((delta * delta) * (delta * delta)); 
     }
 
     virtual colour emitted(const ray &r_in, const hit_record &rec) const override {
