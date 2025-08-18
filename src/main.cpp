@@ -33,9 +33,16 @@ int main(int argc, char **argv) {
     // delete[] buf;
 
     if (argc < 2) {
+        std::cout << "Filename? (blank for stdout)\n";
+        std::getline(std::cin, filename);
+    }
+    else {
+        filename.assign(argv[1]);
+    }
+
+    if (filename.empty()) {
         filetype = FILE_TYPE_STDOUT;
     } else {
-        filename.assign(argv[1]);
         auto idx = filename.find(".");
         if (idx != std::string::npos) {
             auto ext = filename.substr(idx + 1);
