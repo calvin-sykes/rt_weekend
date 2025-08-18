@@ -362,9 +362,7 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
-# Models, environment maps etc.
-media/
-
 # Output images
 *.png
 *.hdr
+!media/*
