@@ -27,7 +27,8 @@ private:
         auto phi = random_number(0.0, two_pi);
         auto r2 = random_number();
 
-        auto z = 1 + r2 * (sqrt(1 - radius * radius / dist2) - 1);
+        auto root = std::max(0.0, 1 - radius * radius / dist2);
+        auto z = 1 + r2 * (sqrt(root) - 1);
         auto x = cos(phi) * sqrt(1 - z * z);
         auto y = sin(phi) * sqrt(1 - z * z);
 

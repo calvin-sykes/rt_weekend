@@ -42,6 +42,11 @@ double sphere::pdf_value(const point3 &o, const vec3 &v) const {
     if (!this->hit(ray(o, v), epsilon, infinity, rec))
         return 0;
 
+    // Fake scattering inside the sphere
+    // Probably happens if two hittables are overlapping
+    if ((cen - o).mag2() < rad * rad)
+         return 0;
+
     auto cos_theta_max = sqrt(1 - rad * rad / (cen - o).mag2());
     auto solid_angle = two_pi * (1 - cos_theta_max);
 
