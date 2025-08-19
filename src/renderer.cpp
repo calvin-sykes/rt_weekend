@@ -107,51 +107,52 @@ void renderer::render(const scene &scn) {
         int tid = rtw_get_thread_num();
         mem_arena arena;
 
-        #pragma omp for schedule(dynamic, 10) nowait
-        for (int j = 0; j < h; j++) {
-            for (int i = 0; i < w; i++) {
-                online_stats<colour> stddev;
-                online_stats<float> stddev_lum;
-                for (int s = 0; s < num_samples; s++) {
-                    ray r = cam.get_ray(i, j);
-                    auto pix_colour = ray_colour<false>(arena, r, background, world, lights, max_depth);
-                    stddev.update(pix_colour);
-                    stddev_lum.update(luminance(pix_colour));
-                }
-                auto idx = i + w * j;
-                buffer[idx] = sanitise_pixel(stddev.mean());
-                variance_buffer[idx] = stddev_lum.variance();
-				arena.reset();
+        #pragma omp for schedule(dynamic, 100) nowait
+        for (int n = 0; n < h * w; n++) {
+            int i = n % w;
+            int j = n / w;
 
-                if (++local_count >= local_count_max) {
-                    #pragma omp atomic
-                    count += local_count;
-                    local_count = 0;
-                }
-                if (tid == 0 && (count - reported_count >= step_size)) {
-                    auto elapsed = static_cast<long long>(clock()) - t0;
-                    auto est_remaining = (elapsed * static_cast<long long>(total_size)) / count - elapsed;
+            online_stats<colour> stddev;
+            online_stats<float> stddev_lum;
+            for (int s = 0; s < num_samples; s++) {
+                ray r = cam.get_ray(i, j);
+                auto pix_colour = ray_colour<false>(arena, r, background, world, lights, max_depth);
+                stddev.update(pix_colour);
+                stddev_lum.update(luminance(pix_colour));
+            }
+            auto idx = i + w * j;
+            buffer[idx] = sanitise_pixel(stddev.mean());
+            variance_buffer[idx] = stddev_lum.variance();
+			arena.reset();
 
-                    std::cerr << "\r" << std::string(msg_length, ' ');
-                    std::ostringstream ss;
+            if (++local_count >= local_count_max) {
+                #pragma omp atomic
+                count += local_count;
+                local_count = 0;
+            }
+            if (tid == 0 && (count - reported_count >= step_size)) {
+                auto elapsed = static_cast<long long>(clock()) - t0;
+                auto est_remaining = (elapsed * static_cast<long long>(total_size)) / count - elapsed;
+
+                std::cerr << "\r" << std::string(msg_length, ' ');
+                std::ostringstream ss;
 #if defined(PLATFORM_MACOS)
-                    ss << "\rTraced " << count * num_samples << '/' << static_cast<long long>(total_size) * num_samples << " rays ("
-                       << (1.0 * elapsed) / (n_threads * CLOCKS_PER_SEC) << "s elapsed / "
-                       << (1.0 * est_remaining) / (n_threads * CLOCKS_PER_SEC) << "s remaining, "
-                       << (count * num_samples * n_threads * CLOCKS_PER_SEC) / elapsed << " rays/sec, "
-                       << (count * n_threads * CLOCKS_PER_SEC) / elapsed << " px/sec)";
-                       #elif defined(PLATFORM_WINDOWS)
-                    ss << "\rTraced " << count * num_samples << '/' << static_cast<long long>(total_size) * num_samples << " rays ("
-                       << (1.0 * elapsed) / CLOCKS_PER_SEC << "s elapsed / "
-                       << (1.0 * est_remaining) / CLOCKS_PER_SEC << "s remaining, "
-                       << (count * num_samples * CLOCKS_PER_SEC) / elapsed << " rays/sec, "
-                       << (count * CLOCKS_PER_SEC) / elapsed << " px/sec)";
+                ss << "\rTraced " << count * num_samples << '/' << static_cast<long long>(total_size) * num_samples << " rays ("
+                    << (1.0 * elapsed) / (n_threads * CLOCKS_PER_SEC) << "s elapsed / "
+                    << (1.0 * est_remaining) / (n_threads * CLOCKS_PER_SEC) << "s remaining, "
+                    << (count * num_samples * n_threads * CLOCKS_PER_SEC) / elapsed << " rays/sec, "
+                    << (count * n_threads * CLOCKS_PER_SEC) / elapsed << " px/sec)";
+                    #elif defined(PLATFORM_WINDOWS)
+                ss << "\rTraced " << count * num_samples << '/' << static_cast<long long>(total_size) * num_samples << " rays ("
+                    << (1.0 * elapsed) / CLOCKS_PER_SEC << "s elapsed / "
+                    << (1.0 * est_remaining) / CLOCKS_PER_SEC << "s remaining, "
+                    << (count * num_samples * CLOCKS_PER_SEC) / elapsed << " rays/sec, "
+                    << (count * CLOCKS_PER_SEC) / elapsed << " px/sec)";
 #endif
-                    auto msg = ss.str();
-                    msg_length = msg.size();
-                    std::cerr << msg;
-                    reported_count = count;
-                }
+                auto msg = ss.str();
+                msg_length = msg.size();
+                std::cerr << msg;
+                reported_count = count;
             }
         }
         
