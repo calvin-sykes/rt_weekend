@@ -90,12 +90,12 @@ int main(int argc, char **argv) {
     rendrr.dump(filetype, filename.c_str());
 
     if (filetype != FILE_TYPE_STDOUT) {
-    auto idx = filename.find(".");
+        auto idx = filename.find(".");
         std::string filename_hdr = filename.replace(idx + 1, 3, "hdr");
-    rendrr.dump(FILE_TYPE_HDR, filename_hdr.c_str());
+        rendrr.dump(FILE_TYPE_HDR, filename_hdr.c_str());
 
-    // std::string variance_filename("variance_" + filename.replace(idx+1, 3, "png"));
-    // rendrr.dump_variance(FILE_TYPE_PNG, variance_filename.c_str());
+        // std::string variance_filename("variance_" + filename.replace(idx+1, 3, "png"));
+        // rendrr.dump_variance(FILE_TYPE_PNG, variance_filename.c_str());
     }
 
     arena.reset();
