@@ -261,28 +261,25 @@ public:
         }
         else if constexpr (N == 3) {
             // prod is (i.i. j.j k.k _._)
-            __m256d prod = _mm256_mul_pd(e, v.e);
-            __m256d swap = _mm256_permute2f128_pd(prod, prod, 1);
+            /*__m256d swap = _mm256_permute2f128_pd(prod, prod, 1);
             prod = _mm256_add_pd(prod, swap);
-            prod = _mm256_hadd_pd(prod, prod);
+            prod = _mm256_hadd_pd(prod, prod);*/
+
+            __m256d prod = _mm256_mul_pd(e, v.e);
+            __m128d low = _mm256_castpd256_pd128(prod);
+            __m128d high = _mm256_extractf128_pd(prod, 1);
+            low = _mm_add_pd(low, high);
+            double sum = _mm_cvtsd_f64(_mm_add_sd(_mm_unpackhi_pd(low, low), low));
 
 #ifndef NDEBUG
             double dp_check = (*this)[0] * v[0] + (*this)[1] * v[1] + (*this)[2] * v[2];
-            double dp_simd = prod.m256d_f64[0];
+            //double dp_simd = prod.m256d_f64[0];
+            double dp_simd = sum;
             assert(abs((dp_simd - dp_check) / dp_check) < 1e-10 || abs(dp_simd - dp_check) < 1e-10);
 #endif
-            return prod.m256d_f64[0];
+            //return prod.m256d_f64[0];
+            return sum;
         }
-
-       /* if constexpr (N == 2) {
-            __m256d dot_prod = _mm256_sum_pd(u1, u2);
-            return dot_prod.m256d_f64[0];
-        }
-        else {
-            __m256d u3 = _mm256_shuffle_pd(prod, prod, _MM_SHUFFLE4(2, 2, 2, 2));
-            __m256d dot_prod = _mm256_add_pd(u1, _mm256_add_pd(u2, u3));
-            return dot_prod.m256d_f64[0];
-        }*/
     }
 
     double mag2() const {
