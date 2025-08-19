@@ -41,26 +41,18 @@ public:
     ) : camera(orbit_pos(r, theta, phi) + look_at, look_at, vup,
         vfov, aperture, focus_dist, image_width, image_height) {};
 
-    ray get_ray(size_t i, size_t j) const {
-        // Pixel position and sample jitter
-        double ds = random_number();
-        double dt = random_number();
+    void init_stratified_sampling(int samples_per_pixel) const {
+        inv_sqrt_spp = 1.0 / sqrt(samples_per_pixel);
+    }
+
+    ray get_ray(size_t i, size_t j, size_t si, size_t sj) const {
+        // Stratified jitter
+        auto px = ((si + random_number()) * inv_sqrt_spp);
+        auto py = ((sj + random_number()) * inv_sqrt_spp);
         
-        // double ux = 2 * random_number();
-        // double uy = 2 * random_number();
-
-        // double ds, dt;
-        // if (ux < 1)
-        //     ds = sqrt(ux) / 2;
-        // else
-        //     ds = (2 - sqrt(2 - ux)) / 2;
-        // if (uy < 1)
-        //     dt = sqrt(uy) / 2;
-        // else
-        //     dt = 2 - sqrt(2 - uy) / 2;
-
-        double s = (i + ds) * pixel_delta_x;
-        double t = (j + dt) * pixel_delta_y;
+        // Pixel position
+        double s = (i + px) * pixel_delta_x;
+        double t = (j + py) * pixel_delta_y;
 
         // Depth-of-field jitter
         vec3 offset;
@@ -96,6 +88,7 @@ private:
     double lens_radius;
     double t0, t1; // shutter open/close times
     double pixel_delta_x, pixel_delta_y;
+    mutable double inv_sqrt_spp;
 };
 
 #endif

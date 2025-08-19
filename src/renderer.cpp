@@ -95,8 +95,10 @@ void renderer::render(const scene &scn) {
 
     volatile size_t count = 0;
     volatile int threads_finished = 0;
-
     clock_t t0 = clock();
+
+    int sqrt_spp = (int) sqrt(num_samples);
+    cam.init_stratified_sampling(sqrt_spp * sqrt_spp);
 
     std::cerr << std::setprecision(3);
     #pragma omp parallel num_threads(n_threads)
@@ -111,19 +113,20 @@ void renderer::render(const scene &scn) {
         for (int n = 0; n < h * w; n++) {
             int i = n % w;
             int j = n / w;
-
             online_stats<colour> stddev;
             online_stats<float> stddev_lum;
-            for (int s = 0; s < num_samples; s++) {
-                ray r = cam.get_ray(i, j);
-                auto pix_colour = ray_colour<false>(arena, r, background, world, lights, max_depth);
-                stddev.update(pix_colour);
-                stddev_lum.update(luminance(pix_colour));
+            for (int si = 0; si < sqrt_spp; si++) {
+                for (int sj = 0; sj < sqrt_spp; sj++) {
+                    ray r = cam.get_ray(i, j, si, sj);
+                    auto pix_colour = ray_colour<true>(arena, r, background, world, lights, max_depth);
+                    stddev.update(pix_colour);
+                    stddev_lum.update(luminance(pix_colour));
+                }
             }
             auto idx = i + w * j;
             buffer[idx] = sanitise_pixel(stddev.mean());
             variance_buffer[idx] = stddev_lum.variance();
-			arena.reset();
+            arena.reset();
 
             if (++local_count >= local_count_max) {
                 #pragma omp atomic
