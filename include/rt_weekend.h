@@ -49,6 +49,11 @@ inline T clamp(T x, T min, T max) {
     return x;
 }
 
+template<typename T = double>
+inline T wrap(T x, T min, T max) {
+    return (x >= 0 ? min : max) + std::fmod(x, max - min);
+}
+
 inline double degrees_to_radians(double degrees) {
     return degrees * pi / 180.0;
 }

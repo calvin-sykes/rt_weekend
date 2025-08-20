@@ -40,7 +40,7 @@ public:
           tex_odd (arena.alloc<solid_colour>(c2)), scl(scale) {}
 
     virtual colour value(double u, double v, const point3 &p) const override {
-        auto sines = sin(scl * p.x()) * /* sin(scl * p.y()) * */ sin(scl * p.z());
+        auto sines = sin(scl * u * two_pi) * sin(scl * v * two_pi);
         return sines < 0 ? tex_odd->value(u, v, p) : tex_even->value(u, v, p);
     }
 
@@ -72,9 +72,9 @@ public:
     image_texture(const char* filename) : image(filename) {}
 
     virtual colour value(double u, double v, const vec3 &p) const override {
-        // Clamp input texture coordinates to [0, 1] x [1, 0]
-        u = clamp(u, 0.0, 1.0);
-        v = 1.0 - clamp(v, 0.0, 1.0);
+        // Wrap input texture coordinates to [0, 1] x [1, 0]
+        u = wrap(u, 0.0, 1.0);
+        v = 1.0 - wrap(v, 0.0, 1.0);
 
         auto i = static_cast<int>(u * image.width());
         auto j = static_cast<int>(v * image.height());
@@ -96,8 +96,8 @@ public:
 
     virtual colour value(double u, double v, const vec3 &p) const override {
         // Clamp input texture coordinates to [0, 1] x [1, 0]
-        u = fmod(u + du, 1.0);
-        v = fmod(v + dv, 1.0);
+        u = wrap(u + du, 0.0, 1.0);
+        v = wrap(v + dv, 0.0, 1.0);
         return t->value(u, v, p);
     }
 
@@ -124,7 +124,7 @@ public:
         case ADD:
             return t1->value(u, v, p) + t2->value(u, v, p);
         case AVERAGE:
-            return 0.5 * (t1->value(u, v, p) * t2->value(u, v, p));
+            return 0.5 * (t1->value(u, v, p) + t2->value(u, v, p));
         default:
             return colour(0);
         }
