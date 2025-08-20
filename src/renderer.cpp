@@ -61,21 +61,21 @@ colour ray_colour(
             if (pdf_val == 0)
                 break;
 
-            // auto scattering_pdf = rec.mat->scattering_pdf(r, rec, srec, scattered);
-            // throughput *= srec.attenuation * (scattering_pdf / pdf_val);
+            // Accumulate attenuation from the brdf
             throughput *= rec.mat->eval_scattering(r, scattered, rec, srec) / pdf_val;
+            r = scattered;
 
-            if constexpr(use_roulette) {
-                if (luminance(throughput) < 0.1) {
-                    auto p = max_axis(throughput);
-                    if (random_number() < p)
+            // Use Russian roulette to terminate unimportant paths
+            if constexpr (use_roulette) {
+                auto p = clamp(max_axis(throughput), 0.01f, 0.99f);
+                if (i > 3) {
+                    if (random_number() > p)
                         break;
-    
+
                     // Add energy from terminated paths
-                    throughput *= 1.0f / (1 - p);
+                    throughput *= 1.0f / p;
                 }
             }
-            r = scattered;
         }
     }
 
