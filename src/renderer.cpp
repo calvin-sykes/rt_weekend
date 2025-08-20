@@ -58,7 +58,7 @@ colour ray_colour(
             }
 
             // If the scattering is impossible, terminate.
-            if (pdf_val == 0)
+            if (pdf_val < epsilon)
                 break;
 
             // Accumulate attenuation from the brdf

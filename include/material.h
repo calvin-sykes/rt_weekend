@@ -273,19 +273,20 @@ private:
 // Phong specular highlight material
 class phong : public material {
 public:
-    phong(mem_arena &arena, const colour &c, double specular_fraction, double shininess)
-        : albedo(arena.alloc<solid_colour>(c)), fspec(specular_fraction), shine(shininess) {};
-    phong(const texture *a, double specular_fraction, double shininess)
-        : albedo(a), fspec(specular_fraction), shine(shininess) {};
+    phong(mem_arena &arena, const colour &c_diffuse, double specular_fraction, double shininess)
+        : phong(arena, c_diffuse, colour(1.0), specular_fraction, shininess) {};
+    phong(mem_arena &arena, const texture *a_diffuse, double specular_fraction, double shininess)
+        : phong(a_diffuse, arena.alloc<solid_colour>(1.0), specular_fraction, shininess) {};
+    
+    phong(mem_arena &arena, const colour &c_diffuse, const colour &c_specular, double specular_fraction, double shininess)
+        : r_d(arena.alloc<solid_colour>(c_diffuse)), r_s(arena.alloc<solid_colour>(c_specular)), fspec(specular_fraction), shine(shininess) {};
+    phong(const texture *a_diffuse, const texture *a_specular, double specular_fraction, double shininess)
+        : r_d(a_diffuse), r_s(a_specular), fspec(specular_fraction), shine(shininess) {};
 
     virtual bool scatter(
         const ray& r_in, const hit_record& rec, scatter_record &srec, mem_arena &arena
     ) const override {
-        if (random_number() < fspec) {
-            srec.attenuation = colour(1.0);
-        } else {
-            srec.attenuation = albedo->value(rec.u, rec.v, rec.p);
-        }
+        srec.attenuation = fspec * r_s->value(rec.u, rec.v, rec.p) + (1 - fspec) * r_d->value(rec.u, rec.v, rec.p);
         srec.pure_specular = false;
         srec.pdf_ptr = arena.alloc<blinn_phong_pdf>(rec.normal, r_in.direction(), fspec, shine);
         return true;
@@ -294,15 +295,17 @@ public:
     colour eval_scattering(
         const ray &r_in, const ray &r_scattered, const hit_record &rec, const scatter_record &srec
     ) const override {
+        auto rs_corr = r_s->value(rec.u, rec.v, rec.p) * fspec;
+        auto rd_corr = r_d->value(rec.u, rec.v, rec.p) * (1 - fspec);
         auto cosine = std::max(0.0, dot(rec.normal, unit_vector(r_scattered.direction())));
         auto half_vector = unit_vector(unit_vector(r_scattered.direction()) - unit_vector(r_in.direction()));
         auto cos_alpha = std::max(0.0, dot(half_vector, rec.normal));
         auto specular = (shine + 1) * inv_two_pi * pow(cos_alpha, shine);
-        return cosine * ((1 - fspec) * srec.attenuation * inv_pi + fspec * colour(1.0) * specular);
+        return cosine * ((1 - fspec) * rd_corr * inv_pi + fspec * rs_corr * specular);
     };
 
 private:
-    const texture *albedo;
+    const texture *r_d, *r_s;
     double fspec, shine;
 };
 

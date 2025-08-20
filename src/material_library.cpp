@@ -18,8 +18,8 @@ std::optional<materials_map> load_material_library(mem_arena& arena, const char*
     materials_map materials;
     
     double Ns, d;
-    colour /*Ka,*/ Kd, Ks;
-    std::optional<std::string> map_Kd;
+    colour Kd, Ks;
+    std::optional<std::string> map_Kd, map_Ks;
 
     char line[128];
     std::string header;
@@ -31,39 +31,44 @@ std::optional<materials_map> load_material_library(mem_arena& arena, const char*
         if (header == "newmtl") {
             ss >> name;
             havemat = true;
-        }
-        else if (header == "Ns") {
+        } else if (header == "Ns") {
             ss >> Ns;
-        }
-        else if (header == "d") {
+        } else if (header == "d") {
             ss >> d;
-        }
-        /*} else if (!strcmp(header, "Ka")) {
-                ss >> Ka;*/
-        else if (header == "Kd") {
+        } else if (header == "Kd") {
             ss >> Kd;
-        }
-        else if (header == "Ks") {
+        } else if (header == "Ks") {
             ss >> Ks;
-        }
-        else if (header == "map_Kd") {
+        } else if (header == "map_Kd") {
             std::string tmp;
             ss >> tmp;
             map_Kd = path + tmp;
-        }
-        else if (havemat && header.empty()) {
-            texture* tex_diffuse;
-            texture* tex_specular = arena.alloc<solid_colour>(Ks);
-
+        } else if (header == "map_Ks") {
+            std::string tmp;
+            ss >> tmp;
+            map_Ks = path + tmp;
+        } else if (havemat && header.empty()) {
+            texture *tex_diffuse, *tex_specular;
+            
             if (map_Kd)
-                tex_diffuse = arena.alloc<image_texture>(map_Kd->c_str());
+                tex_diffuse = arena.alloc<image_texture>(map_Kd->c_str(), Kd);
             else
                 tex_diffuse = arena.alloc<solid_colour>(Kd);
-            float fspec = Ks.mag() / Kd.mag();
-            fspec = std::min(std::max(0.0f, fspec), 1.0f);
-            materials[name] = arena.alloc<ashikhmin_shirley>(tex_diffuse, tex_specular, fspec, Ns, Ns);
+            
+            if (map_Ks)
+                tex_specular = arena.alloc<image_texture>(map_Ks->c_str(), Ks);
+            else
+                tex_specular = arena.alloc<solid_colour>(Ks);
+            
+            float fspec = clamp(Ks.mag() / Kd.mag(), 0.0f, 1.0f);
             //materials[name] = arena.alloc<lambertian>(tex_diffuse);
+            materials[name] = arena.alloc<phong>(tex_diffuse, tex_specular, fspec, Ns);
+            // materials[name] = arena.alloc<ashikhmin_shirley>(tex_diffuse, tex_specular, fspec, Ns, Ns);
+
+            Ns = d = 0.0;
+            Kd = Ks = colour();
             map_Kd.reset();
+            map_Ks.reset();
             havemat = false;
         }
         header.clear();
@@ -71,18 +76,27 @@ std::optional<materials_map> load_material_library(mem_arena& arena, const char*
 
     // Parse the final material
     if (havemat) {
-        texture* tex_diffuse;
-        texture* tex_specular = arena.alloc<solid_colour>(Ks);
-
+        texture *tex_diffuse, *tex_specular;
+            
         if (map_Kd)
-            tex_diffuse = arena.alloc<image_texture>(map_Kd->c_str());
+            tex_diffuse = arena.alloc<image_texture>(map_Kd->c_str(), Kd);
         else
             tex_diffuse = arena.alloc<solid_colour>(Kd);
-        float fspec = Ks.mag() / Kd.mag();
-        fspec = std::min(std::max(0.0f, fspec), 1.0f);
-        materials[name] = arena.alloc<ashikhmin_shirley>(tex_diffuse, tex_specular, fspec, Ns, Ns);
+        
+        if (map_Ks)
+            tex_specular = arena.alloc<image_texture>(map_Ks->c_str(), Ks);
+        else
+            tex_specular = arena.alloc<solid_colour>(Ks);
+        
+        float fspec = clamp(Ks.mag() / Kd.mag(), 0.0f, 1.0f);
         //materials[name] = arena.alloc<lambertian>(tex_diffuse);
+        materials[name] = arena.alloc<phong>(tex_diffuse, tex_specular, fspec, Ns);
+        // materials[name] = arena.alloc<ashikhmin_shirley>(tex_diffuse, tex_specular, fspec, Ns, Ns);
+
+        Ns = d = 0.0;
+        Kd = Ks = colour();
         map_Kd.reset();
+        map_Ks.reset();
         havemat = false;
     }
 

@@ -558,9 +558,9 @@ hittable_list world_phong(mem_arena &arena) {
     auto ball_colour = colour(1.0, 0.0, 0.0);
     for (int i = 0; i < num_spheres; i++) {
         auto shininess = pow(10, min_shine + i * ((max_shine - min_shine) / (num_spheres - 1)));
-        //auto fspec = (0.05 * i) / num_spheres + (0.001 * (num_spheres - i)) / num_spheres;
-        //auto phong_mat = arena.alloc<phong>(arena, ball_colour, fspec, shininess);
-        auto phong_mat = arena.alloc<ashikhmin_shirley>(arena, ball_colour, colour(1.0), 0.05, shininess, shininess);
+        auto fspec = (0.05 * i) / num_spheres + (0.001 * (num_spheres - i)) / num_spheres;
+        // auto phong_mat = arena.alloc<phong>(arena, ball_colour, fspec, shininess);
+        auto phong_mat = arena.alloc<ashikhmin_shirley>(arena, ball_colour, colour(1.0), fspec, shininess, shininess);
         
         auto ball = arena.alloc<sphere>(point3(xpos, radius, 0), radius, phong_mat);
         spheres.add(ball);
@@ -663,7 +663,7 @@ hittable_list world_book2(mem_arena &arena, bool rgb_light) {
     // Perlin noise textured sphere
     auto pertex = arena.alloc<noise_texture>(0.1);
     //auto permat = arena.alloc<lambertian>(pertex);
-    auto permat = arena.alloc<phong>(pertex, 0.05, 50);
+    auto permat = arena.alloc<phong>(arena, pertex, 0.05, 50);
     objects.add(arena.alloc<sphere>(point3(220, 280, 300), 80, permat));
 
     // Cube full of random white spheres
@@ -687,7 +687,7 @@ hittable_list world_tokyo(mem_arena& arena) {
     auto glass_mat = arena.alloc<dielectric>(1.5);
     auto metal_mat = arena.alloc<metal>(arena, colour(1.0, 0.86, 0.57), 0.0);
     auto marble_tex = arena.alloc<noise_texture>(2.0);
-    auto marble_mat = arena.alloc<phong>(marble_tex, 0.001, 10);
+    auto marble_mat = arena.alloc<phong>(arena, marble_tex, 0.001, 10);
     auto dragon_mat = arena.alloc<ashikhmin_shirley>(arena, 2 * colour(0.104, 0.0629, 0.0225), 2 * colour(0.0558, 0.037, 0.015), 0.999, 4.53e3, 4.53e3);
     auto light = arena.alloc<diffuse_light>(
         arena.alloc<blend_texture>(
@@ -733,7 +733,7 @@ hittable_list world_tokyo(mem_arena& arena) {
 
 hittable_list world_studio(mem_arena& arena) {
     auto marble_tex = arena.alloc<noise_texture>(2.0);
-    auto marble_mat = arena.alloc<phong>(marble_tex, 0.01, 10);
+    auto marble_mat = arena.alloc<phong>(arena, marble_tex, 0.01, 10);
 
     // auto teapot_mat = arena.alloc<coloured_dielectric>(arena, colour(0.0, 1.0, 1.0), 10.3, 1.5);
     auto teapot_mat = arena.alloc<ashikhmin_shirley>(arena, colour(0.0), colour(0.983, 0.991, 0.995), 1.0, 1000, 10);
@@ -779,7 +779,7 @@ hittable_list world_studio(mem_arena& arena) {
 
 hittable_list world_park(mem_arena& arena) {
     auto marble_tex = arena.alloc<noise_texture>(2.0);
-    auto marble_mat = arena.alloc<phong>(marble_tex, 0.01, 10);
+    auto marble_mat = arena.alloc<phong>(arena, marble_tex, 0.01, 10);
 
     auto teapot_mat = arena.alloc<phong>(arena, colour(0.12, 0.45, 0.15), 0.08, 50);
     // auto dragon_mat = arena.alloc<metal>(arena, colour(0.983, 0.991, 0.995), 0.45);
