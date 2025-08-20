@@ -87,8 +87,8 @@ mesh::mesh(mem_arena &arena, const point3& origin, double scale, double rotate_x
             while (std::regex_search(pos, line_match, face_line_regex)) {
                 auto face_def = line_match[1].str();
                 if (std::regex_search(face_def, face_match, face_regex)) {
-                    if(face_match[0].matched)
-                        temp_index_vertices.push_back(stol(face_match[0].str()));
+                    if(face_match[1].matched)
+                        temp_index_vertices.push_back(stol(face_match[1].str()));
                     if(face_match[2].matched)
                         temp_index_uvs.push_back(stol(face_match[2].str()));
                     if(face_match[3].matched)
