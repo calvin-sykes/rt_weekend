@@ -910,6 +910,25 @@ hittable_list world_xmas(mem_arena& arena) {
     return objects;
 }
 
+hittable_list world_sponza(mem_arena& arena) {
+    hittable_list objects;
+    objects.add(arena.alloc<mesh>(arena, point3(), 100.0, "media/sponza.obj", nullptr));
+    // objects.add(arena.alloc<mesh>(arena, point3(), 100.0, "media/sponza.obj", arena.alloc<lambertian>(arena.alloc<image_texture>("media/uv_checker.png"))));
+    // objects.add(arena.alloc<mesh>(arena, point3(), 100.0, "media/sponza.obj", arena.alloc<lambertian>(arena.alloc<checker_texture>(arena, colour(1.0, 0.0, 1.0), colour(0.0, 0.0, 0.0), 4))));
+
+    auto light = arena.alloc<diffuse_light>(arena, colour(500.0));
+    auto sun = arena.alloc<sphere>(point3(0, 300, 0), 50, light);
+    sun->set_sampling_target(true);
+    objects.add(sun);
+
+    // auto yellow_light = arena.alloc<diffuse_light>(arena, colour(14.0, 14.0, 7.0));
+    // auto glow_sphere = arena.alloc<sphere>(point3(5, 20, -9), 1.25, yellow_light);
+    // glow_sphere->set_sampling_target(true);
+    // objects.add(glow_sphere);
+
+    return objects;
+}
+
 camera cam_book1(size_t image_width, size_t image_height) {
     point3 look_from(13, 2, 3);
     point3 look_at(0, 0, 0);
@@ -1071,6 +1090,35 @@ camera cam_xmas(size_t image_width, size_t image_height) {
     );
 }
 
+// looking along ground floor from arch
+camera cam_sponza_arch(size_t image_width, size_t image_height) {
+    point3 look_from(-34.5, 6, 0);
+    point3 look_at(10, 12, 0);
+    vec3 vup(0, 1, 0);
+    auto vfov = 60.0;
+    auto aperture = 0.0;
+    auto dist_to_focus = (look_from - look_at).mag();
+
+    vec3 flip_x(-1, 1, 1);
+    return camera(
+        look_from * flip_x, look_at * flip_x, vup, vfov, aperture, dist_to_focus, image_width, image_height
+    );
+}
+
+// looking diagonally down from upper side gallery
+camera cam_sponza_gallery(size_t image_width, size_t image_height) {
+    point3 look_from(-19.5, 20.5, 5.0);
+    point3 look_at(15, 12, -12);
+    vec3 vup(0, 1, 0);
+    auto vfov = 60.0;
+    auto aperture = 0.0;
+    auto dist_to_focus = (look_from - look_at).mag();
+
+    return camera(
+        look_from, look_at, vup, vfov, aperture, dist_to_focus, image_width, image_height
+    );
+}
+
 scene get_scene(mem_arena &arena, int s, size_t image_width, size_t image_height) {
     // auto white = arena.alloc<solid_colour>(1.0f);
     auto black = arena.alloc<solid_colour>(0.0f);
@@ -1138,6 +1186,9 @@ scene get_scene(mem_arena &arena, int s, size_t image_width, size_t image_height
         break;
     case SCENE_XMAS:
         return scene(world_xmas(arena), cam_xmas(image_width, image_height), black);
+        break;
+    case SCENE_SPONZA:
+        return scene(world_sponza(arena), cam_sponza_arch(image_width, image_height), arena.alloc<image_texture>("media/sun.hdr"), true);
         break;
     }
 }

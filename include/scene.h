@@ -47,6 +47,7 @@ enum SCENES {
     SCENE_STUDIO,
     SCENE_PARK,
     SCENE_XMAS,
+    SCENE_SPONZA,
     NUM_SCENES
 };
 
