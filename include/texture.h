@@ -69,7 +69,8 @@ class image_texture : public texture {
 public:
     image_texture() {}
 
-    image_texture(const char* filename) : image(filename) {}
+    image_texture(const char* filename) : image(filename), scale(1.0) {}
+    image_texture(const char* filename, const colour &scale) : image(filename), scale(scale) {}
 
     virtual colour value(double u, double v, const vec3 &p) const override {
         // Wrap input texture coordinates to [0, 1] x [1, 0]
@@ -82,11 +83,12 @@ public:
         auto pixel = image.pixel_data(i, j);
 
         //constexpr float colour_scale = 1.0f / 255.0f;
-        return colour(pixel[0], pixel[1], pixel[2]);
+        return colour(pixel[0], pixel[1], pixel[2]) * scale;
     }
 
 private:
     rtw_image image;
+    colour scale;
 };
 
 class shifted_texture : public texture {

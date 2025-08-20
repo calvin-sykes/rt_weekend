@@ -287,7 +287,7 @@ public:
             srec.attenuation = albedo->value(rec.u, rec.v, rec.p);
         }
         srec.pure_specular = false;
-        srec.pdf_ptr = arena.alloc<blinn_phong_pdf>(rec.normal, r_in.direction(), shine, fspec);
+        srec.pdf_ptr = arena.alloc<blinn_phong_pdf>(rec.normal, r_in.direction(), fspec, shine);
         return true;
     }
 
@@ -322,7 +322,7 @@ class ashikhmin_shirley : public material {
     ) const override {
         srec.attenuation = fspec * r_s->value(rec.u, rec.v, rec.p) + (1 - fspec) * r_d->value(rec.u, rec.v, rec.p);
         srec.pure_specular = false;
-        srec.pdf_ptr = arena.alloc<ashikhmin_shirley_pdf>(rec.normal, r_in.direction(), nu, nv, fspec);
+        srec.pdf_ptr = arena.alloc<ashikhmin_shirley_pdf>(rec.normal, r_in.direction(), fspec, nu, nv);
         return true;
     }
 

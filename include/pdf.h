@@ -57,8 +57,8 @@ public:
 
 class blinn_phong_pdf : public probability_density_function {
 public:
-    blinn_phong_pdf(const vec3& normal, const vec3& in_dir, double shininess, double fspec)
-        : shine(shininess), fspec(fspec), rin_direction(in_dir),
+    blinn_phong_pdf(const vec3& normal, const vec3& in_dir, double fspec, double shininess)
+        : fspec(fspec), shine(shininess), rin_direction(in_dir),
         onb_normal(normal), onb_reflected(reflect(in_dir, normal)) {};
 
     virtual double value(const vec3 &direction) const override {
@@ -92,15 +92,15 @@ public:
     }
 
 private:
-    double shine, fspec;
+    double fspec, shine;
     vec3 rin_direction;
     orthonormal_basis onb_normal, onb_reflected;
 };
 
 class ashikhmin_shirley_pdf : public probability_density_function {
 public:
-    ashikhmin_shirley_pdf(const vec3& normal, const vec3& in_direction, double nu, double nv, double fspec)
-        : rin_direction(in_direction), onb_normal(normal), nu(nu), nv(nv), fspec(fspec) {}
+    ashikhmin_shirley_pdf(const vec3& normal, const vec3& in_direction, double fspec, double nu, double nv)
+        : rin_direction(in_direction), onb_normal(normal), fspec(fspec), nu(nu), nv(nv) {}
 
     virtual double value(const vec3 &direction) const override {
         auto v = -unit_vector(rin_direction);
@@ -174,7 +174,7 @@ private:
 
     vec3 rin_direction;
     orthonormal_basis onb_normal;
-    double nu, nv, fspec;
+    double fspec, nu, nv;
 };
 
 class hittable_pdf : public probability_density_function {
